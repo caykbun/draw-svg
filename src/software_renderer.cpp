@@ -26,7 +26,7 @@ void SoftwareRendererImp::fill_sample(int sx, int sy, const Color &color) {
 	sample_color.b = sample_buffer[4 * s_idx + 2] * inv255;
 	sample_color.a = sample_buffer[4 * s_idx + 3] * inv255;
 
-  sample_color = ref->alpha_blending_helper(sample_color, color);
+  sample_color = alpha_blending(sample_color, color);
 
   sample_buffer[4 * s_idx] = (uint8_t)(sample_color.r * 255);
   sample_buffer[4 * s_idx + 1] = (uint8_t)(sample_color.g * 255);
