@@ -35,7 +35,8 @@ void SoftwareRendererImp::fill_pixel(int x, int y, const Color &color) {
 	pixel_color.b = pixel_buffer[4 * (x + y * width) + 2] * inv255;
 	pixel_color.a = pixel_buffer[4 * (x + y * width) + 3] * inv255;
 
-	pixel_color = ref->alpha_blending_helper(pixel_color, color);
+	// pixel_color = ref->alpha_blending_helper(pixel_color, color);
+  pixel_color = alpha_blending(pixel_color, color);
 
 	pixel_buffer[4 * (x + y * width)] = (uint8_t)(pixel_color.r * 255);
 	pixel_buffer[4 * (x + y * width) + 1] = (uint8_t)(pixel_color.g * 255);
@@ -273,11 +274,12 @@ void SoftwareRendererImp::rasterize_point( float x, float y, Color color ) {
 
   // fill sample - NOT doing alpha blending!
   // TODO: Call fill_pixel here to run alpha blending
-  pixel_buffer[4 * (sx + sy * width)] = (uint8_t)(color.r * 255);
-  pixel_buffer[4 * (sx + sy * width) + 1] = (uint8_t)(color.g * 255);
-  pixel_buffer[4 * (sx + sy * width) + 2] = (uint8_t)(color.b * 255);
-  pixel_buffer[4 * (sx + sy * width) + 3] = (uint8_t)(color.a * 255);
+  // pixel_buffer[4 * (sx + sy * width)] = (uint8_t)(color.r * 255);
+  // pixel_buffer[4 * (sx + sy * width) + 1] = (uint8_t)(color.g * 255);
+  // pixel_buffer[4 * (sx + sy * width) + 2] = (uint8_t)(color.b * 255);
+  // pixel_buffer[4 * (sx + sy * width) + 3] = (uint8_t)(color.a * 255);
 
+  fill_pixel(sx, sy, color);
 }
 
 void SoftwareRendererImp::rasterize_line( float x0, float y0,
@@ -485,10 +487,12 @@ void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
       if (test_vals[i] > 0) goto next_sample;
     }
 
-    pixel_buffer[4 * s_idx] = (uint8_t)(color.r * 255);
-    pixel_buffer[4 * s_idx + 1] = (uint8_t)(color.g * 255);
-    pixel_buffer[4 * s_idx + 2] = (uint8_t)(color.b * 255);
-    pixel_buffer[4 * s_idx + 3] = (uint8_t)(color.a * 255);
+    // pixel_buffer[4 * s_idx] = (uint8_t)(color.r * 255);
+    // pixel_buffer[4 * s_idx + 1] = (uint8_t)(color.g * 255);
+    // pixel_buffer[4 * s_idx + 2] = (uint8_t)(color.b * 255);
+    // pixel_buffer[4 * s_idx + 3] = (uint8_t)(color.a * 255);
+
+    fill_pixel(sx, sy, color);
 
 next_sample:
     if (zig && cx < max_x) {
@@ -540,10 +544,7 @@ void SoftwareRendererImp::rasterize_image( float x0, float y0,
 
       Color c = sampler.sample_bilinear(tex, u, v);
       
-      pixel_buffer[4 * (x + y * width)] = (uint8_t)(c.r * 255);
-      pixel_buffer[4 * (x + y * width) + 1] = (uint8_t)(c.g * 255);
-      pixel_buffer[4 * (x + y * width) + 2] = (uint8_t)(c.b * 255);
-      pixel_buffer[4 * (x + y * width) + 3] = (uint8_t)(c.a * 255);
+      fill_pixel(x, y, c);
     }
   }
 }
@@ -562,6 +563,11 @@ Color SoftwareRendererImp::alpha_blending(Color pixel_color, Color color)
 {
   // Task 5
   // Implement alpha compositing
+  pixel_color.r = (1 - color.a) * pixel_color.r + color.r;
+  pixel_color.g = (1 - color.a) * pixel_color.g + color.g;
+  pixel_color.b = (1 - color.a) * pixel_color.b + color.b;
+  pixel_color.a = 1 - (1 - color.a) * (1 - pixel_color.a);
+
   return pixel_color;
 }
 
