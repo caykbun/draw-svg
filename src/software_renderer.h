@@ -94,6 +94,10 @@ public:
 	void set_pixel_buffer(unsigned char* pixel_buffer,
 		size_t width, size_t height);
 
+	// resize sample buffer, must be called after knowing the sample rate and pixel size
+	void resize_sample_buffer();
+	void clear_sample_buffer();
+
 	void fill_sample(int sx, int sy, const Color& color);
 	void fill_pixel(int x, int y, const Color& color);
 
@@ -156,6 +160,8 @@ private:
 	Color alpha_blending(Color pixel_color, Color color);
 
 	SoftwareRendererRef *ref;
+
+	std::vector<unsigned char> sample_buffer;
 }; // class SoftwareRendererImp
 
 
