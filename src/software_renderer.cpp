@@ -436,16 +436,17 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
   }
 }
 
-void genLineFunc(float x0, float y0, float x1, float y1, LineFunc* l) {
-  if (!l) perror("LineFunc struct not initialized!");
+inline void initEdge(float x0, float y0, float x1, float y1, float top_y, Edge* l) {
+  if (!l) perror("Edge struct not initialized!");
   
   l->A = y1 - y0;
   l->B = x0 - x1;
   l->C = y0 * (x1 - x0) - x0 * (y1 - y0);
+  l->isTopLeft = (y0 == y1 == top_y) || (y0 < y1);  // top or left edges
 }
 
-inline float testSide(float x, float y, LineFunc* l) {
-  if (!l) perror("LineFunc struct not initialized!");
+inline float testValue(float x, float y, Edge* l) {
+  if (!l) perror("Edge struct not initialized!");
   
   return l->A * x + l->B * y + l->C;
 }
@@ -457,12 +458,11 @@ void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
   // Task 1: 
   // Implement triangle rasterization
 
-  // TODO: check valid triangle?
-
   // check points order, make counterclockwise
-  LineFunc l01;
-  genLineFunc(x0, y0, x1, y1, &l01);
-  float test = testSide(x2, y2, &l01);
+  Edge l01;
+  float top_y = min(y0, min(y1, y2));
+  initEdge(x0, y0, x1, y1, top_y, &l01);
+  float test = testValue(x2, y2, &l01);
   if (test > 0) {
     // clockwise, make counter-clockwise for easier processing
     std::swap(x1, x2);
@@ -475,12 +475,13 @@ void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
   x2 *= sample_rate; y2 *= sample_rate;
   size_t s_width = width * sample_rate;
   size_t s_height = height * sample_rate;
+  top_y *= sample_rate;
 
-  // calculate edge formula
-  LineFunc edges[3];
-  genLineFunc(x0, y0, x1, y1, &edges[0]);
-  genLineFunc(x1, y1, x2, y2, &edges[1]);
-  genLineFunc(x2, y2, x0, y0, &edges[2]);
+  // calculate edge formula and whether it's a top / left edge
+  Edge edges[3];
+  initEdge(x0, y0, x1, y1, top_y, &edges[0]);
+  initEdge(x1, y1, x2, y2, top_y, &edges[1]);
+  initEdge(x2, y2, x0, y0, top_y, &edges[2]);
 
   // compute bounding box rounding the nearest sample point 
   float min_x = (int)(max(0.f, (min(x0, min(x1, x2))) - 1)) + 0.5f;
@@ -492,7 +493,7 @@ void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
   float cx = min_x; float cy = min_y;
   float test_vals[3];
   for (int i = 0; i < 3; i++) {
-    test_vals[i] = testSide(cx, cy, &edges[i]);
+    test_vals[i] = testValue(cx, cy, &edges[i]);
   }
   bool zig = true;
 
@@ -502,7 +503,7 @@ void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
     int s_idx = sx + sy * s_width;
 
     for (int i = 0; i < 3; i++) {
-      if (test_vals[i] > 0) goto next_sample;
+      if (test_vals[i] > 0 || (test_vals[i] == 0 && !edges[i].isTopLeft)) goto next_sample;
     }
 
     fill_sample(sx, sy, color);
@@ -529,6 +530,7 @@ next_sample:
   
   // Advanced Task
   // Implementing Triangle Edge Rules
+  // Implemented in functions for struct Edge
 }
 
 void SoftwareRendererImp::rasterize_image( float x0, float y0,
