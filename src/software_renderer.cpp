@@ -394,7 +394,7 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
   // handle first endpoint
   int xend = round(x0);
   float yend = y0 + gradient * (xend - x0);
-  float xgap = rfpart(x0);
+  float xgap = rfpart(x0 + 0.5);
   int xpxl1 = xend; // this will be used in the main loop
   int ypxl1 = ipart(yend);
   if (steep) {
@@ -409,7 +409,7 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
   // handle second endpoint
   xend = round(x1);
   yend = y1 + gradient * (xend - x1);
-  xgap = fpart(x1);
+  xgap = fpart(x1 + 0.5);
   int xpxl2 = xend; // this will be used in the main loop
   int ypxl2 = ipart(yend);
   if (steep) {
@@ -422,13 +422,13 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
 
   // main loop
   if (steep) {
-    for (int x = xpxl1 + 1; x <= xpxl2; x++) {
+    for (int x = xpxl1 + 1; x <= xpxl2 - 1; x++) {
       rasterize_point(ipart(intery), x, color * rfpart(intery));
       rasterize_point(ipart(intery) + 1, x, color * fpart(intery));
       intery += gradient;
     }
   } else {
-    for (int x = xpxl1 + 1; x <= xpxl2; x++) {
+    for (int x = xpxl1 + 1; x <= xpxl2 - 1; x++) {
       rasterize_point(x, ipart(intery), color * rfpart(intery));
       rasterize_point(x, ipart(intery) + 1, color * fpart(intery));
       intery += gradient;
