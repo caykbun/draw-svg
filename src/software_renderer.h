@@ -317,7 +317,7 @@ typedef struct {
   float A;
   float B;
   float C;
-  bool isTopLeft;
+  bool is_topleft;
 } Edge;
 
 } // namespace CS248

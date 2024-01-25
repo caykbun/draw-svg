@@ -442,7 +442,7 @@ inline void initEdge(float x0, float y0, float x1, float y1, float top_y, Edge* 
   l->A = y1 - y0;
   l->B = x0 - x1;
   l->C = y0 * (x1 - x0) - x0 * (y1 - y0);
-  l->isTopLeft = (y0 == y1 == top_y) || (y0 < y1);  // top or left edges
+  l->is_topleft = (y0 == y1 == top_y) || (y0 < y1);  // top or left edges
 }
 
 inline float testValue(float x, float y, Edge* l) {
@@ -503,7 +503,7 @@ void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
     int s_idx = sx + sy * s_width;
 
     for (int i = 0; i < 3; i++) {
-      if (test_vals[i] > 0 || (test_vals[i] == 0 && !edges[i].isTopLeft)) goto next_sample;
+      if (test_vals[i] > 0 || (test_vals[i] == 0 && !edges[i].is_topleft)) goto next_sample;
     }
 
     fill_sample(sx, sy, color);
