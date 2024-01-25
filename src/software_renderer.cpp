@@ -252,6 +252,10 @@ void SoftwareRendererImp::draw_ellipse( Ellipse& ellipse ) {
 
   // Advanced Task
   // Implement ellipse rasterization
+  // draw fill
+  rasterize_ellipse(ellipse.center.x, ellipse.center.y, 
+                    ellipse.radius.x, ellipse.radius.y, 
+                    ellipse.style.fillColor);
 
 }
 
@@ -560,6 +564,72 @@ void SoftwareRendererImp::rasterize_image( float x0, float y0,
       Color c = sampler.sample_bilinear(tex, u, v);
       
       fill_pixel(x, y, c);
+    }
+  }
+}
+
+void SoftwareRendererImp::rasterize_ellipse(float cx, float cy,
+                                            float rx, float ry,
+                                            Color color) {
+  // compute bounding box
+  Vector2D top_left = Vector2D(cx - rx, cy + ry);
+  Vector2D bottom_right = Vector2D(cx + rx, cy - ry);
+  Vector2D top_right = Vector2D(cx + rx, cy + ry);
+  Vector2D bottom_left = Vector2D(cx - rx, cy - ry);
+  Vector2D box[4];
+
+  // transform bounding box
+  box[0] = transform(top_left);
+  box[1] = transform(bottom_right);
+  box[2] = transform(top_right);
+  box[3] = transform(bottom_left);
+
+  // transform to sample space, just like rasterize_triangle
+  size_t s_width = width * sample_rate;
+  size_t s_height = height * sample_rate;
+  for (int i = 0; i < 4; i++) {
+    box[i] *= sample_rate;
+  }
+
+  // compute approximate bounding box (bounding box of bounding box to be compatible with rotations)
+  float min_x = box[0].x; float max_x = box[0].x; 
+  float min_y = box[0].y; float max_y = box[0].y; 
+  for (int i = 1; i < 4; i++) {
+    min_x = min(min_x, (float)box[i].x);
+    max_x = max(max_x, (float)box[i].x);
+    min_y = min(min_y, (float)box[i].y);
+    max_y = max(max_y, (float)box[i].y);
+  }
+  min_x = max(0.5f, static_cast<int>(floor(min_x)) + 0.5f);
+  max_x = min(s_width - 0.5f, static_cast<int>(floor(max_x)) + 0.5f);
+  min_y = max(0.5f, static_cast<int>(floor(min_y)) + 0.5f);
+  max_y = min(s_height - 0.5f, static_cast<int>(floor(max_y)) + 0.5f);
+
+  // Composite the transformation matrix for ellipse coverage test
+  // Since the above operations are equivalent to translate -> transform -> scale, and the test
+  // requires ellipse at origin with the original cx cy rx ry, we first perform the inverse 
+  // transformation
+  double inv_scale[9] = {1.0 / sample_rate, 0, 0, 
+                        0, 1.0 / sample_rate, 0,
+                        0, 0, 1};
+  double inv_translate[9] = {1, 0, -cx, 
+                            0, 1, -cy,
+                            0, 0, 1};
+  Matrix3x3 test_mat = Matrix3x3((double*)inv_translate) * transformation.inv() * Matrix3x3((double*)inv_scale) ;
+  auto ellipse_coverage_test = [&](float x, float y){
+    Vector3D p = {x, y, 1};
+    p = test_mat * p;
+    return (ry * ry) * (p.x * p.x) + (rx * rx) * (p.y * p.y) - (ry * ry) * (rx * rx) <= 0;
+  };
+
+  // rasterization, for each sample point, trasfer back to the origin before performing coverage test
+  for (float x = min_x; x < max_x; x++) {
+    for (float y = min_y; y < max_y; y++) {
+      if (!ellipse_coverage_test(x, y)) continue;
+
+      int sx = static_cast<int>(floor(x));
+      int sy = static_cast<int>(floor(y));
+      fill_sample(sx, sy, color);
     }
   }
 }

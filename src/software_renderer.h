@@ -153,6 +153,11 @@ private:
 		float x1, float y1,
 		Texture& tex);
 
+	// rasterize an ellipse
+	void rasterize_ellipse(float cx, float cy,
+							float rx, float ry,
+							Color color);
+
 	// resolve samples to pixel buffer
 	void resolve(void);
 
