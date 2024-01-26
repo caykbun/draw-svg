@@ -89,7 +89,9 @@ void Sampler2DImp::generate_mips(Texture& tex, int startLevel) {
         Color avgColor = {0, 0, 0, 0};
         for (int dy = 0; dy < 2; dy++) {
           for (int dx = 0; dx < 2; dx++) {
-            int srcIdx = 4 * ((baseY + dy) * prevLevel.width + (baseX + dx));
+            int clampedX = std::min(baseX + dx, static_cast<int>(prevLevel.width) - 1);
+            int clampedY = std::min(baseY + dy, static_cast<int>(prevLevel.height) - 1);
+            int srcIdx = 4 * (clampedY * prevLevel.width + clampedX);
             avgColor.r += prevLevel.texels[srcIdx];
             avgColor.g += prevLevel.texels[srcIdx + 1];
             avgColor.b += prevLevel.texels[srcIdx + 2];
@@ -105,10 +107,9 @@ void Sampler2DImp::generate_mips(Texture& tex, int startLevel) {
 
         // Set the pixel in the current level
         int dstIdx = 4 * (y * currLevel.width + x);
-        float_to_uint8(&currLevel.texels[dstIdx], &avgColor.r);
-        float_to_uint8(&currLevel.texels[dstIdx + 1], &avgColor.g);
-        float_to_uint8(&currLevel.texels[dstIdx + 2], &avgColor.b);
-        float_to_uint8(&currLevel.texels[dstIdx + 3], &avgColor.a);
+        if (dstIdx + 3 < currLevel.texels.size()) {
+          float_to_uint8(&currLevel.texels[dstIdx], &avgColor.r);
+        }
       }
     }
   }
