@@ -552,6 +552,23 @@ void SoftwareRendererImp::rasterize_image( float x0, float y0,
   float scaleX = 1.0f / (x1 - x0);
   float scaleY = 1.0f / (y1 - y0);
 
+  // Bilinear
+  // for (int x = minX; x <= maxX; x++) {
+  //   for (int y = minY; y <= maxY; y++) {
+  //     if (x < 0 || x >= width || y < 0 || y >= height) continue;
+
+  //     float u = (x + 0.5f - x0) * scaleX;
+  //     float v = (y + 0.5f - y0) * scaleY;
+
+  //     if ((u < 0 || u > 1) || (v < 0 || v > 1)) continue;
+
+  //     Color c = sampler.sample_bilinear(tex, u, v);
+      
+  //     fill_pixel(x, y, c);
+  //   }
+  // }
+
+  // Trilinear
   for (int x = minX; x <= maxX; x++) {
     for (int y = minY; y <= maxY; y++) {
       if (x < 0 || x >= width || y < 0 || y >= height) continue;
@@ -561,7 +578,7 @@ void SoftwareRendererImp::rasterize_image( float x0, float y0,
 
       if ((u < 0 || u > 1) || (v < 0 || v > 1)) continue;
 
-      Color c = sampler.sample_bilinear(tex, u, v);
+      Color c = sampler.sample_trilinear(tex, u, v, scaleX, scaleY);
       
       fill_pixel(x, y, c);
     }
