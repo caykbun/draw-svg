@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 <svg width="210mm" height="297mm" version="1.1" viewBox="0 0 210 297" xmlns="http://www.w3.org/2000/svg">
- <g stroke-width="1.0016">
+ <g transform="rotate(-30) translate(-100 40)" stroke-width="1.0016">
   <g fill-rule="evenodd">
    <!-- d="m111.01 55.32 44.176-8.4461v38.259l-44.176 0.8448z" -->
    <polygon  points="155.19071,46.873836 155.19071,85.132365 111.01455,85.977162 111.01455,55.319908 " fill="#e9e9ff" fill-opacity="0.7"/>
